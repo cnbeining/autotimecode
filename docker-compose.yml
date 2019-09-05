@@ -1,0 +1,22 @@
+services:
+
+  kaldi_logmel:
+    build: ./kaldi_logmel/
+    expose:
+      - 8000
+    links:
+      -
+    volumes:
+      - tmp-volume: /tmp/
+
+  gentle_xmlrpc:
+    build: ./gentle_xmlrpc/
+    expose:
+      - 8000
+    links:
+      -
+    volumes:
+      - tmp-volume: /tmp/
+
+volumes:
+  tmp-volume:
