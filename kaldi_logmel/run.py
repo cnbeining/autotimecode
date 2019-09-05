@@ -8,13 +8,39 @@
 import os
 import subprocess
 from pathlib import Path
+from socketserver import ThreadingMixIn
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
+
+
+class ThreadXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer): pass
 
 
 # Restrict to a particular path.
 class RequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
+
+
+def pong():
+    return 'pong!'
+
+
+def convert_to_wav(path_input_file):
+    """str, str->int
+
+    Convert single input file to WAV.
+
+    Reason: WAV can be cut at any subsecond, and works everywhere.
+    """
+    path_output = path_input_file + '_16000.wav'
+    command = ["ffmpeg", "-y", "-i", path_input_file,
+               "-ac", '1', "-ar", '16000', path_output]
+    result = subprocess.run(command)
+    
+    if result.returncode is not 0:
+        return ''
+    
+    return path_output
 
 
 def run_logmel(wav_path):
@@ -54,12 +80,13 @@ def run_logmel(wav_path):
 
 if __name__ == '__main__':
     # If running by CLI, create RPC server that will listen on
-    server = SimpleXMLRPCServer(("0.0.0.0", 8000),
+    server = ThreadXMLRPCServer(("0.0.0.0", 8000),
                                 requestHandler = RequestHandler)
     
     # Enabling this will allow XML-RPC introspection functions - only use in trusted environment!
     server.register_introspection_functions()
     
+    server.register_function(pong)
     server.register_function(run_logmel)
     
     # allow Ctrl+C exit

@@ -9,10 +9,14 @@ This is a XMLRPC server running logmel computation.
 
 ```
 docker build -t kaldi_logmel .
-docker run kaldi_logmel -v /tmp:/tmp
+docker run -v /tmp:/tmp -p 8000:8000 kaldi_logmel
 ```
 
-Will expose port 8080.
+Will expose port 8000.
+
+## Developing
+
+Make sure the code is compatible with Python 3.5 as the base image is Debian 9.6 - unless if you are interested in rebuilding everything.
 
 ## FAQ
 
