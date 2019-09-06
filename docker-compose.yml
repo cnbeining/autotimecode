@@ -1,22 +1,25 @@
 services:
 
-  kaldi_logmel:
+  kaldi-logmel:
     build: ./kaldi_logmel/
-    expose:
-      - 8000
-    links:
-      -
     volumes:
       - tmp-volume: /tmp/
+    container_name: kaldi-logmel
 
-  gentle_xmlrpc:
+  gentle-xmlrpc:
     build: ./gentle_xmlrpc/
-    expose:
-      - 8000
-    links:
-      -
     volumes:
       - tmp-volume: /tmp/
+    container_name: gentle-xmlrpc
+
+  tensorflow-serving-vad:
+    image: tensorflow/serving:latest
+    restart: unless-stopped
+    volumes:
+      - ./tensorflow_serving_vad:/models
+    command: --model_config_file=/models/models.cfg
+    container_name: tensorflow-serving-vad
 
 volumes:
   tmp-volume:
+    driver: local
