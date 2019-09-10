@@ -18,6 +18,8 @@ Will expose port 8000.
 
 Make sure the code is compatible with Python 3.5 as the base image is Debian 9.6 - unless if you are interested in rebuilding everything.
 
+Input WAV should be 16K.
+
 ## FAQ
 
 ### Q: Why not pykaldi?

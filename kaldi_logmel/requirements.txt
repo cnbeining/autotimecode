@@ -1,0 +1,4 @@
+srt
+kaldi_io
+numpy
+requests
