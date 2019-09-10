@@ -89,7 +89,7 @@ def generate_audio_segments(path_input_file, subtitle, elastic = 0):
     # No multiprocessing due to weird bug before with ffmpeg
     result = []
     for i, sub in enumerate(subtitle):
-        path_output_wav_segment = '{path_output_wav}_{i}.flac'.format(path_output_wav = path_output_wav, i = i)
+        path_output_wav_segment = '{path_output_wav}_{i}.wav'.format(path_output_wav = path_output_wav, i = i)
         returncode = _convert_to_wav_segment(path_output_wav,
                                              path_output_wav_segment,
                                              max(0, sub.start.total_seconds() - elastic),
@@ -198,7 +198,7 @@ def run_gentle(wav_path, srt_content, elastic = 0.5):
     return compose(new_subtitle)
 
 
-def pong():
+def ping():
     return 'pong!'
 
 
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     # Enabling this will allow XML-RPC introspection functions - only use in trusted environment!
     server.register_introspection_functions()
     
-    server.register_function(pong)
+    server.register_function(ping)
     server.register_function(run_gentle)
     server.register_function(generate_audio_segments)
 
