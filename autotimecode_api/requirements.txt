@@ -1,0 +1,11 @@
+Flask
+Flask-Cors
+requests
+flask_restful
+six
+Werkzeug
+gunicorn
+gevent
+dnspython
+python-dotenv
+mongoengine

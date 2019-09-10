@@ -5,13 +5,13 @@ services:
   kaldi-logmel:
     build: ./kaldi_logmel/
     volumes:
-      - tmp-volume: /tmp/
+      - tmp-volume:/tmp/
     container_name: kaldi-logmel
 
   gentle-xmlrpc:
     build: ./gentle_xmlrpc/
     volumes:
-      - tmp-volume: /tmp/
+      - tmp-volume:/tmp/
     container_name: gentle-xmlrpc
 
   tensorflow-serving-vad:
@@ -22,6 +22,17 @@ services:
     command: --model_config_file=/models/models.cfg
     container_name: tensorflow-serving-vad
 
+  autotimecode-api:
+    build: ./autotimecode_api/
+    container_name: autotimecode-api
+    ports:
+      - 5155:5155
+
 volumes:
   tmp-volume:
     driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /Users/Beining/Documents/coding/VAD/2005
+
