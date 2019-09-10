@@ -2,10 +2,12 @@ FROM cnbeining/gentle:latest
 
 LABEL maintainer="i@cnbeining.com"
 
+COPY requirements.txt /
+
+RUN pip3 install -r /requirements.txt
+
 COPY . /app
 WORKDIR /app
-
-RUN pip3 install -r requirements.txt
 
 EXPOSE 8000
 
