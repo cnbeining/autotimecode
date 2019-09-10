@@ -4,9 +4,15 @@
 
 This is Tensorflow Serving server, running VAD model.
 
-## Building & Running
+## Running
 
 ```
+docker run -t --rm -p 8501:8501 -p 8500:8500 \
+    -v "$(pwd)/:/models/" tensorflow/serving \
+    --model_config_file=/models/models.cfg \
+    --model_config_file_poll_wait_seconds=60
+
+
 docker build -t tensorflow_serving_vad .
 docker run -v /tmp:/tmp -p 8500:8500 -p 8501:8501 tensorflow_serving_vad
 ```
