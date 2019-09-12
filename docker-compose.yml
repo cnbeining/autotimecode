@@ -28,6 +28,10 @@ services:
     ports:
       - 5155:5155
 
+  autotimecode-worker:
+    build: ./autotimecode_worker/
+    container_name: autotimecode-worker
+
 volumes:
   tmp-volume:
     driver: local

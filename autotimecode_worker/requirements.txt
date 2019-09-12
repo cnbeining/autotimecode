@@ -1,0 +1,4 @@
+celery[librabbitmq,msgpack]
+mongoengine
+bson
+gevent
