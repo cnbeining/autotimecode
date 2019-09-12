@@ -23,3 +23,11 @@ def make_response(payload, status = 200):
             json.dumps({
                 "data": payload
             }, cls = JSONEncoder), mimetype = "application/json", status = status)
+
+
+def make_response_error(payload, status = 500):
+    """"""
+    return Response(
+            json.dumps({
+                "error": payload
+            }, cls = JSONEncoder), mimetype = "application/json", status = status)

@@ -7,6 +7,7 @@ import os
 from config import db
 from error_handlers import register_errorhandlers
 from resources import HelloWorld
+from resources.fa import FAResource, FATaskResource
 from resources.vad import VADTaskResource, VADResource
 
 
@@ -15,13 +16,6 @@ def create_app():
     
     # Logging
     # Load other Flask config
-    app_flask = Flask(__name__)
-    api = flask_restful.Api(app_flask)
-
-    api.add_resource(HelloWorld, '/')
-    api.add_resource(VADResource, '/vad')
-    api.add_resource(VADTaskResource, '/vad/<task_id>')
-
     register_errorhandlers(app)
     
     CORS(app, resources = {
@@ -33,4 +27,17 @@ def create_app():
 
     db.init_app(app)
 
+    api = flask_restful.Api(app)
+
+    api.add_resource(HelloWorld, '/')
+    api.add_resource(VADResource, '/vad/')
+    api.add_resource(VADTaskResource, '/vad/<task_id>')
+    api.add_resource(FAResource, '/fa/')
+    api.add_resource(FATaskResource, '/fa/<task_id>')
+    
     return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(host = "0.0.0.0", port = 5055)

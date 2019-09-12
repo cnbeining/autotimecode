@@ -1,41 +1,39 @@
 #!/usr/bin/env python
 #coding:utf-8
-import flask
 from flask import Flask, jsonify, request
 from flask_restful import reqparse, abort, Api, Resource
 import time
-from db.vad import VADTask, get_vad_task_by_task_id
+
+from db.fa import FATask, get_fa_task_by_task_id
 from resources.response import make_response, make_response_error
 
 parser = reqparse.RequestParser()
 parser.add_argument('wav_url', type = str, required = True,
                     help = "wav_url cannot be blank!")
+parser.add_argument('srt', type = str, required = True,
+                    help = "wav_url cannot be blank!")
 
-
-class VADResource(Resource):
+class FAResource(Resource):
 
     def post(self):
         request.get_json(force = True)
         args = parser.parse_args()
+        
+        fa_task = FATask(wav_url = args['wav_url'], timestamp = int(time.time()), request_srt_content=args['srt'])
 
-        uploaded_file = flask.request.files['file']
-        
-        
-        vad_task = VADTask(wav_url = args['wav_url'], timestamp = int(time.time()))
-        
-        vad_task.save()
+        fa_task.save()
         
         # todo: add to queue
         
-        return make_response(vad_task.to_dict(), status = 201)
+        return make_response(fa_task.to_dict(), status = 201)
 
 
-class VADTaskResource(Resource):
+class FATaskResource(Resource):
     
     def get(self, task_id):
-        vad_task = get_vad_task_by_task_id(task_id)
+        fa_task = get_fa_task_by_task_id(task_id)
         
-        if not vad_task:
+        if not fa_task:
             return make_response_error('Cannot find task ID', 404)
 
-        return make_response(vad_task.to_dict())
+        return make_response(fa_task.to_dict())

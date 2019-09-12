@@ -1,5 +1,7 @@
 FROM python:3.7-alpine as base
 
+MAINTAINER David Zhuang <i@cnbeining.com>
+
 FROM base as builder
 RUN apk add --no-cache gcc libc-dev unixodbc-dev
 RUN mkdir /install

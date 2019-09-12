@@ -9,3 +9,4 @@ gevent
 dnspython
 python-dotenv
 mongoengine
+bson
