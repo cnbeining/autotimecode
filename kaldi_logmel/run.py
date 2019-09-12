@@ -50,7 +50,7 @@ def convert_to_wav(path_input_file):
     Reason: WAV can be cut at any subsecond, and works everywhere.
     """
     path_output = path_input_file + '_16000.wav'
-    command = ["ffmpeg", "-y", "-i", path_input_file,
+    command = ["/app/ffmpeg", "-y", "-i", path_input_file,
                "-ac", '1', "-ar", '16000', path_output]
     result = subprocess.run(command)
     
@@ -147,6 +147,7 @@ if __name__ == '__main__':
     server.register_introspection_functions()
     
     server.register_function(ping)
+    server.register_function(convert_to_wav)
     server.register_function(run_logmel)
     server.register_function(run_vad)
 

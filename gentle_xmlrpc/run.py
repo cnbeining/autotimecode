@@ -39,7 +39,7 @@ def _upsample_wav(path_input_file):
     
     path_output = path_input_file + '_8000.wav'
     
-    command = ["ffmpeg", "-y", "-i", path_input_file, '-c:a', 'pcm_s16le',
+    command = ["/app/ffmpeg", "-y", "-i", path_input_file, '-c:a', 'pcm_s16le',
                "-ac", '1', "-ar", '8000', path_output]
     result = subprocess.run(command)
     
@@ -60,7 +60,7 @@ def _convert_to_wav_segment(path_input_file, path_output, from_sec, to_sec):
     """
     # don't need very detailed log - this rarely fails,
     # and 300+ ffmpeg runs ruins the log
-    command = ["ffmpeg", "-y", "-loglevel", "error", "-ss", str(from_sec),
+    command = ["/app/ffmpeg", "-y", "-loglevel", "error", "-ss", str(from_sec),
                "-t", str(to_sec - from_sec), "-i", path_input_file, path_output]
     # print(command)
     result = subprocess.run(command)
@@ -192,7 +192,7 @@ def run_gentle(wav_path, srt_content, elastic = 0.5):
     subtitle = _cleanup_subtitle(subtitle, elastic = 0)
     
     wav_path_list = generate_audio_segments(wav_path, subtitle, elastic = 0)
-
+    
     new_subtitle = _batch_fa(subtitle, wav_path_list)
     
     return compose(new_subtitle)

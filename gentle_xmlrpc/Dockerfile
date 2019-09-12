@@ -1,6 +1,6 @@
 FROM cnbeining/gentle:latest
 
-LABEL maintainer="i@cnbeining.com"
+MAINTAINER David Zhuang <i@cnbeining.com>
 
 COPY requirements.txt /
 

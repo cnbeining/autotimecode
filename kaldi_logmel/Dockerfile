@@ -1,6 +1,6 @@
 FROM kaldiasr/kaldi:latest
 
-LABEL maintainer="i@cnbeining.com"
+MAINTAINER David Zhuang <i@cnbeining.com>
 
 COPY . /app
 WORKDIR /app
