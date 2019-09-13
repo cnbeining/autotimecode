@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 #coding:utf-8
 import json
-from json import JSONEncoder
 
+from bson import ObjectId
 from flask import jsonify, Response
+
+
+class JSONEncoder(json.JSONEncoder):
+    
+    def default(self, o):
+        if isinstance(o, bytes):
+            return ''
+        if isinstance(o, ObjectId):
+            return str(o)
+        
+        return super(JSONEncoder, self).default(o)
 
 
 def merge_dicts(*dict_args):
@@ -26,8 +37,13 @@ def make_response(payload, status = 200):
 
 
 def make_response_error(payload, status = 500):
-    """"""
+    """For JSON response"""
     return Response(
             json.dumps({
                 "error": payload
             }, cls = JSONEncoder), mimetype = "application/json", status = status)
+
+
+def make_response_text(payload, status = 200):
+    """for SRT"""
+    return Response(payload, mimetype = "text/plain", status = status)
