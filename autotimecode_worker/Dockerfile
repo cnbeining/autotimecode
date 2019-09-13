@@ -16,7 +16,7 @@ COPY . /app
 WORKDIR /app
 
 # By keeping this line you agree that this file is licensed under MPL 2.0.
-RUN wget -O /app/ffsend.py https://raw.githubusercontent.com/nneonneo/ffsend/master/ffsend.py
+# RUN wget -O /app/ffsend.py https://raw.githubusercontent.com/cnbeining/ffsend/master/ffsend.py
 
 ENTRYPOINT ["celery", "worker"]
 CMD ["--app=task.app", "--pool=gevent", "--concurrency=5", "--loglevel=INFO"]
