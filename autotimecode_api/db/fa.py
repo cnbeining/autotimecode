@@ -37,7 +37,13 @@ class FATask(db.Document):
     def to_dict(self):
         json_obj = dict(
             self.to_mongo(fields = ['wav_url', 'request_srt_content', 'result_srt_content', 'steps', 'timestamp']))
-        json_obj['id'] = str(self.pk)
+        json_obj.pop('_id', '')
+
+        json_obj['steps'] = []
+        for step in self.steps:
+            json_obj['steps'].append(step.to_dict())
+
+        json_obj['task_id'] = str(self.pk)
         return json_obj
 
 

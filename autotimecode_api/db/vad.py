@@ -17,7 +17,6 @@ class VADTaskStep(db.EmbeddedDocument):
 
 
 class VADTask(db.Document):
-    _id = db.ObjectIdField(required = False)
     wav_url = db.StringField(required = False, dafault = '')
     wav_tmp_path = db.StringField(required = False, dafault = '/tmp/tmppath')
     srt_content = db.StringField(required = False, dafault = '')
@@ -34,8 +33,14 @@ class VADTask(db.Document):
     }
     
     def to_dict(self):
-        json_obj = dict(self.to_mongo(fields = ['wav_url', 'srt_content', 'steps', 'timestamp']))
-        json_obj['id'] = str(self.pk)
+        json_obj = dict(self.to_mongo(fields = ['wav_url', 'srt_content', 'timestamp']))
+        json_obj.pop('_id', '')
+        
+        json_obj['steps'] = []
+        for step in self.steps:
+            json_obj['steps'].append(step.to_dict())
+        
+        json_obj['task_id'] = str(self.pk)
         return json_obj
 
 
