@@ -2,28 +2,26 @@
 # coding:utf-8
 
 from bson import ObjectId
-from mongoengine import DoesNotExist, ValidationError
-
-from config import db
+from mongoengine import *
 
 
-class FATaskStep(db.EmbeddedDocument):
-    number = db.IntField(required = False, default = 0)
-    comment = db.StringField(required = False, default = '')
-    timestamp = db.IntField(required = False)
+class FATaskStep(EmbeddedDocument):
+    number = IntField(required = False, default = 0)
+    comment = StringField(required = False, default = '')
+    timestamp = IntField(required = False)
     
     def to_dict(self):
         return dict(self.to_mongo(fields = ['number', 'comment', 'timestamp']))
 
 
-class FATask(db.Document):
-    _id = db.ObjectIdField(required = False)
-    wav_url = db.StringField(required = False, dafault = '')
-    wav_tmp_path = db.StringField(required = False, dafault = '/tmp/tmppath')
-    request_srt_content = db.StringField(required = False, dafault = '')
-    result_srt_content = db.StringField(required = False, dafault = '')
-    steps = db.EmbeddedDocumentListField(FATaskStep)
-    timestamp = db.IntField(required = False)
+class FATask(Document):
+    _id = ObjectIdField(required = False)
+    wav_url = StringField(required = False, dafault = '')
+    wav_tmp_path = StringField(required = False, dafault = '/tmp/tmppath')
+    request_srt_content = StringField(required = False, dafault = '')
+    result_srt_content = StringField(required = False, dafault = '')
+    steps = EmbeddedDocumentListField(FATaskStep)
+    timestamp = IntField(required = False)
     
     meta = {
         'collection': 'vad_task',
@@ -36,8 +34,14 @@ class FATask(db.Document):
     
     def to_dict(self):
         json_obj = dict(
-            self.to_mongo(fields = ['wav_url', 'request_srt_content', 'result_srt_content', 'steps', 'timestamp']))
-        json_obj['id'] = str(self.pk)
+                self.to_mongo(fields = ['wav_url', 'request_srt_content', 'result_srt_content', 'steps', 'timestamp']))
+        json_obj.pop('_id', '')
+        
+        json_obj['steps'] = []
+        for step in self.steps:
+            json_obj['steps'].append(step.to_dict())
+        
+        json_obj['task_id'] = str(self.pk)
         return json_obj
 
 

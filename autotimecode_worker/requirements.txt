@@ -1,4 +1,10 @@
+celery
 celery[librabbitmq,msgpack]
 mongoengine
 bson
 gevent
+clint
+pycrypto
+requests
+requests_toolbelt
+pycryptodomex
