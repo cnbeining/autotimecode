@@ -10,3 +10,10 @@ dnspython
 python-dotenv
 mongoengine
 bson
+flask_mongoengine
+celery
+celery[librabbitmq,msgpack]
+clint
+pycrypto
+requests_toolbelt
+pycryptodomex
