@@ -39,7 +39,7 @@ def _upsample_wav(path_input_file):
     
     path_output = path_input_file + '_8000.wav'
     
-    command = ["/app/ffmpeg", "-y", "-i", path_input_file, '-c:a', 'pcm_s16le',
+    command = ["/app/ffmpeg", "-y", "-i", path_input_file, '-c:a', 'pcm_s16le', "-loglevel", "error",
                "-ac", '1', "-ar", '8000', path_output]
     result = subprocess.run(command)
     
@@ -71,11 +71,9 @@ def _convert_to_wav_segment(path_input_file, path_output, from_sec, to_sec):
 def generate_audio_segments(path_input_file, subtitle, elastic = 0):
     """str, list of Subtitle, Bool, float->list of str
 
-    Return list of absolute paths, each path is a FLAC containing 1 segment
+    Return list of absolute paths, each path is a WAV containing 1 segment
     aligned to the related segment from the subtitle file.
-
-    Output should be FLAC since Google API loves it.
-
+    
     path_input_file: Any file that can be converted to WAV by ffmpeg
     subtitle: list of Subtitle.
     elastic: minus {elastic} seconds on from_sec,
@@ -87,6 +85,7 @@ def generate_audio_segments(path_input_file, subtitle, elastic = 0):
     
     # Then convert WAV into WAV segments
     # No multiprocessing due to weird bug before with ffmpeg
+    # todo: rewrite this to utilize multiple output of ffmpeg
     result = []
     for i, sub in enumerate(subtitle):
         path_output_wav_segment = '{path_output_wav}_{i}.wav'.format(path_output_wav = path_output_wav, i = i)
@@ -107,10 +106,12 @@ def _on_progress(p):
         logging.debug("%s: %s" % (k, v))
 
 
-def _cleanup_subtitle(subtitle, elastic = 0):
+def cleanup_subtitle(subtitle, elastic = 0):
     """list of Subtitle -> list of Subtitle
 
     Remove everything starting with #, remove all blank lines
+    
+    Note: this function has a copy at Worker - make sure to update both when editing!
     """
     for s in subtitle:
         s.content = '\n'.join([i for i in s.content.split('\n') if i and not i.startswith('#')])
@@ -135,6 +136,10 @@ def call_gentle_chunk(wav_path, transcript, disfluency = False, conservative = F
 
 def run_gentle_chunk(audio_path, transcript):
     """srt, Subtitle-> list of Subtitle
+    
+    Run gentle on one line of Subtitle,
+    which could have multiple lines,
+    standing for multiple subtitles.
     """
     
     original_lines = transcript.content.split('\n')
@@ -150,9 +155,9 @@ def run_gentle_chunk(audio_path, transcript):
     for i, clean_word_line in enumerate(clean_word):
         len_consumed += len(clean_word_line)
         start_sec_lst = [i['start'] for i in resp['words'][len_consumed:] if i['case'] == 'success']
-        if not len(
-                start_sec_lst):  # nothing from this point can be recognized. This is not recoverable and must be
-            # manually corrected
+        # nothing from this point can be recognized. This is not recoverable and must be
+        # manually corrected
+        if not len(start_sec_lst):
             result.append(
                     Subtitle(index = 1, start = transcript.end, end = transcript.end + datetime.timedelta(seconds = 1),
                              content = original_lines[i], proprietary = ''))
@@ -176,8 +181,16 @@ def run_gentle_chunk(audio_path, transcript):
     return result
 
 
-def _batch_fa(subtitle, wav_path_list):
-    """"""
+def batch_fa(subtitle, wav_path_list):
+    """
+    Run gentle on list of Subtitle.
+    :param subtitle: list of subtitle
+    :type subtitle: list
+    :param wav_path_list: list of WAV chunks
+    :type wav_path_list: list
+    :return: list of Subtitle
+    :rtype: list
+    """
     result = []
     for i, j in zip(wav_path_list, subtitle):
         result += run_gentle_chunk(i, j)
@@ -189,11 +202,11 @@ def run_gentle(wav_path, srt_content, elastic = 0.5):
     """
     subtitle = list(parse(srt_content))
     
-    subtitle = _cleanup_subtitle(subtitle, elastic = 0)
+    subtitle = cleanup_subtitle(subtitle, elastic = 0)
     
     wav_path_list = generate_audio_segments(wav_path, subtitle, elastic = 0)
     
-    new_subtitle = _batch_fa(subtitle, wav_path_list)
+    new_subtitle = batch_fa(subtitle, wav_path_list)
     
     return compose(new_subtitle)
 
@@ -212,7 +225,9 @@ if __name__ == '__main__':
     
     server.register_function(ping)
     server.register_function(run_gentle)
+    server.register_function(cleanup_subtitle)
     server.register_function(generate_audio_segments)
+    server.register_function(batch_fa)
 
     # allow Ctrl+C exit
     try:
