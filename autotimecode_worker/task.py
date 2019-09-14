@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # coding:utf-8
+import json
 import os
 import shutil
 
-import time
-
 from celery import Celery
 from pathlib import Path
+from srt import *
 
-from helper import download_file_from_ffsend
-from db.vad import get_vad_task_by_task_id, VADTaskStep
+from db.fa import get_fa_task_by_task_id
+from db import TaskStep
+from helper import download_file_from_ffsend, get_step_obj_from_ffsend_code
+from db.vad import get_vad_task_by_task_id
 import xmlrpc.client
 from mongoengine import *
 
@@ -44,6 +46,7 @@ def find_vad(task_id):
 @app.task(name = 'vad.run_vad')
 def run_vad(task_id):
     """"""
+    ## Fetch task
     vad_task = get_vad_task_by_task_id(task_id)
     if not vad_task:
         return ''
@@ -60,70 +63,62 @@ def run_vad(task_id):
     ## File uploading
     if 'send.firefox.com' in vad_task.wav_url:
         code, media_file_path = download_file_from_ffsend(vad_task.wav_url, tmp_dir)
-        if code < 0:
-            if code == -2:
-                step_obj = VADTaskStep(comment = 'File too large', timestamp = int(time.time()))
-            elif code == -3:
-                step_obj = VADTaskStep(comment = 'File not audio or video', timestamp = int(time.time()))
-            elif code == -4:
-                step_obj = VADTaskStep(comment = 'File not valid', timestamp = int(time.time()))
-            elif code == -5:
-                step_obj = VADTaskStep(comment = 'Failed to create file', timestamp = int(time.time()))
-            shutil.rmtree(tmp_dir, ignore_errors = True)
-        else:
-            step_obj = VADTaskStep(comment = 'FFsend file uploaded', timestamp = int(time.time()))
-
+        step_obj = get_step_obj_from_ffsend_code(code)
+        
         vad_task.steps.append(step_obj)
         vad_task.save()
         
         if code < 0:
+            shutil.rmtree(tmp_dir, ignore_errors = True)
             return False
     
     else:
-        step_obj = VADTaskStep(comment = 'Uploader not implemented', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Uploader not implemented')
         vad_task.steps.append(step_obj)
         vad_task.save()
-    
+        return False
     
     ## PREPROCESS
     wav_tmp_path = vad_server.convert_to_wav(media_file_path)
     if not wav_tmp_path:
-        step_obj = VADTaskStep(comment = 'Cannot convert to WAV 16000', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Cannot convert to WAV 16000')
     else:
-        step_obj = VADTaskStep(comment = 'Converted to WAV 16000', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Converted to WAV 16000')
         vad_task.wav_tmp_path = wav_tmp_path
     
     vad_task.steps.append(step_obj)
     vad_task.save()
     if not wav_tmp_path:
+        shutil.rmtree(tmp_dir, ignore_errors = True)
         return False
     
     ## LOG-MEL
     scp_path = vad_server.run_logmel(wav_tmp_path)
     if not scp_path:
-        step_obj = VADTaskStep(comment = 'Cannot convert to SCP', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Cannot convert to SCP')
     else:
-        step_obj = VADTaskStep(comment = 'Converted to SCP', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Converted to SCP')
     
     vad_task.steps.append(step_obj)
     vad_task.save()
     if not scp_path:
+        shutil.rmtree(tmp_dir, ignore_errors = True)
         return False
-    
     
     ## CALL Tensorflow Serving
     srt_content = vad_server.run_vad(scp_path)
     if not srt_content:
-        step_obj = VADTaskStep(comment = 'Cannot conduct VAD', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Cannot conduct VAD')
     else:
-        step_obj = VADTaskStep(comment = 'Converted to SRT', timestamp = int(time.time()))
+        step_obj = TaskStep(comment = 'Converted to SRT')
         vad_task.srt_content = srt_content
     
     vad_task.steps.append(step_obj)
     vad_task.save()
     if not scp_path:
+        shutil.rmtree(tmp_dir, ignore_errors = True)
         return False
-
+    
     shutil.rmtree(tmp_dir, ignore_errors = True)
     return True
 
@@ -131,7 +126,70 @@ def run_vad(task_id):
 @app.task(name = 'fa.run_fa')
 def run_fa(task_id):
     """"""
-    return False
+    ## Fetch task
+    fa_task = get_fa_task_by_task_id(task_id)
+    if not fa_task:
+        return ''
+    
+    tmp_pathname = str(fa_task.pk)
+    tmp_dir = '/tmp/' + tmp_pathname
+    
+    # make sure new working dir exists
+    Path(tmp_dir).mkdir(parents = True, exist_ok = True)
+    
+    # shall be the working dir
+    os.chdir(tmp_dir)
+    
+    ## File uploading
+    if 'send.firefox.com' in fa_task.wav_url:
+        code, media_file_path = download_file_from_ffsend(fa_task.wav_url, tmp_dir)
+        step_obj = get_step_obj_from_ffsend_code(code)
+        
+        fa_task.steps.append(step_obj)
+        fa_task.save()
+        
+        if code < 0:
+            shutil.rmtree(tmp_dir, ignore_errors = True)
+            return False
+    
+    else:
+        step_obj = TaskStep(comment = 'Uploader not implemented')
+        fa_task.steps.append(step_obj)
+        fa_task.save()
+        return False
+    
+    ## Parse SRT
+    if not fa_task.request_srt_content:
+        step_obj = TaskStep(comment = 'Request SRT is empty')
+        shutil.rmtree(tmp_dir, ignore_errors = True)
+        fa_task.steps.append(step_obj)
+        fa_task.save()
+        return False
+    
+    try:
+        request_srt_content = json.loads('{"srt":"' + fa_task.request_srt_content + '"}')['srt']
+    except:
+        step_obj = TaskStep(comment = 'SRT cannot be parsed')
+        shutil.rmtree(tmp_dir, ignore_errors = True)
+        fa_task.steps.append(step_obj)
+        fa_task.save()
+        return False
+    
+    ## Conduct FA
+    result = fa_server.run_gentle(media_file_path, request_srt_content)
+    if len(result) < 1:
+        step_obj = TaskStep(comment = 'Cannot conduct FA')
+    else:
+        step_obj = TaskStep(comment = 'FA conducted')
+        fa_task.result_srt_content = result
+    fa_task.steps.append(step_obj)
+    fa_task.save()
+    shutil.rmtree(tmp_dir, ignore_errors = True)
+    
+    if len(result) < 1:
+        return False
+    
+    return True
 
 
 if __name__ == '__main__':

@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 #coding:utf-8
+import datetime
 import glob
 import os
 import subprocess
 
+from db import TaskStep
 from ffsend import parse_url, get_metadata
 
 
@@ -86,3 +88,20 @@ def download_file_from_ffsend(ffsend_url, target_path):
         return -5, ''
     else:  # FFsend file uploaded
         return 1, media_file_path
+
+
+def get_step_obj_from_ffsend_code(code):
+    """"""
+    if code < 0:
+        if code == -2:
+            step_obj = TaskStep(comment = 'File too large')
+        elif code == -3:
+            step_obj = TaskStep(comment = 'File not audio or video')
+        elif code == -4:
+            step_obj = TaskStep(comment = 'File not valid')
+        elif code == -5:
+            step_obj = TaskStep(comment = 'Failed to create file')
+    else:
+        step_obj = TaskStep(comment = 'FFsend file uploaded')
+    
+    return step_obj

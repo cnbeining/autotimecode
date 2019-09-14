@@ -8,3 +8,4 @@ pycrypto
 requests
 requests_toolbelt
 pycryptodomex
+srt

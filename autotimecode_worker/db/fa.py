@@ -1,36 +1,33 @@
 #!/usr/bin/env python
 # coding:utf-8
+import time
 
 from bson import ObjectId
 from mongoengine import *
 
-
-class FATaskStep(EmbeddedDocument):
-    number = IntField(required = False, default = 0)
-    comment = StringField(required = False, default = '')
-    timestamp = IntField(required = False)
-    
-    def to_dict(self):
-        return dict(self.to_mongo(fields = ['number', 'comment', 'timestamp']))
+from db import TaskStep
 
 
 class FATask(Document):
-    _id = ObjectIdField(required = False)
     wav_url = StringField(required = False, dafault = '')
     wav_tmp_path = StringField(required = False, dafault = '/tmp/tmppath')
     request_srt_content = StringField(required = False, dafault = '')
     result_srt_content = StringField(required = False, dafault = '')
-    steps = EmbeddedDocumentListField(FATaskStep)
-    timestamp = IntField(required = False)
+    steps = EmbeddedDocumentListField(TaskStep)
+    timestamp = LongField(required = False, default = time.time)
     
     meta = {
-        'collection': 'vad_task',
+        'collection': 'fa_task',
         'index_background': True,
         'indexes': [
             'timestamp'
         ],
         'strict': False
     }
+    
+    def add_step(self, step_obj):
+        self.steps.append(step_obj)
+        return self.save()
     
     def to_dict(self):
         json_obj = dict(

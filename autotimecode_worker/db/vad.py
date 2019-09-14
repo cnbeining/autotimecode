@@ -1,26 +1,19 @@
 #!/usr/bin/env python
 # coding:utf-8
+import time
 
 from bson import ObjectId
 from mongoengine import *
 
-
-class VADTaskStep(EmbeddedDocument):
-    number = IntField(required = False, default = 0)
-    comment = StringField(required = False, default = '')
-    timestamp = IntField(required = False)
-    
-    def to_dict(self):
-        return dict(self.to_mongo(fields = ['number', 'comment', 'timestamp']))
-
+from db import TaskStep
 
 class VADTask(Document):
     wav_url = StringField(required = False, dafault = '')
     wav_tmp_path = StringField(required = False, dafault = '/tmp/tmppath')
     srt_content = StringField(required = False, dafault = '')
-    steps = EmbeddedDocumentListField(VADTaskStep)
-    timestamp = IntField(required = False)
-    
+    steps = EmbeddedDocumentListField(TaskStep)
+    timestamp = LongField(required = False, default = time.time)
+
     meta = {
         'collection': 'vad_task',
         'index_background': True,
@@ -29,6 +22,10 @@ class VADTask(Document):
         ],
         'strict': False
     }
+    
+    def add_step(self, step_obj):
+        self.steps.append(step_obj)
+        return self.save()
     
     def to_dict(self):
         json_obj = dict(self.to_mongo(fields = ['wav_url', 'srt_content', 'timestamp']))
