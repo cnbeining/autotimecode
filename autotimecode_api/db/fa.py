@@ -1,32 +1,24 @@
 #!/usr/bin/env python
 # coding:utf-8
+import time
 
 from bson import ObjectId
 from mongoengine import DoesNotExist, ValidationError
 
 from config import db
-
-
-class FATaskStep(db.EmbeddedDocument):
-    number = db.IntField(required = False, default = 0)
-    comment = db.StringField(required = False, default = '')
-    timestamp = db.IntField(required = False)
-    
-    def to_dict(self):
-        return dict(self.to_mongo(fields = ['number', 'comment', 'timestamp']))
+from db import TaskStep
 
 
 class FATask(db.Document):
-    _id = db.ObjectIdField(required = False)
     wav_url = db.StringField(required = False, dafault = '')
     wav_tmp_path = db.StringField(required = False, dafault = '/tmp/tmppath')
     request_srt_content = db.StringField(required = False, dafault = '')
     result_srt_content = db.StringField(required = False, dafault = '')
-    steps = db.EmbeddedDocumentListField(FATaskStep)
-    timestamp = db.IntField(required = False)
+    steps = db.EmbeddedDocumentListField(TaskStep)
+    timestamp = db.LongField(required = False, default=time.time)
     
     meta = {
-        'collection': 'vad_task',
+        'collection': 'fa_task',
         'index_background': True,
         'indexes': [
             'timestamp'
@@ -34,15 +26,19 @@ class FATask(db.Document):
         'strict': False
     }
     
+    def add_step(self, step_obj):
+        self.steps.append(step_obj)
+        return self.save()
+    
     def to_dict(self):
         json_obj = dict(
             self.to_mongo(fields = ['wav_url', 'request_srt_content', 'result_srt_content', 'steps', 'timestamp']))
         json_obj.pop('_id', '')
-
+        
         json_obj['steps'] = []
         for step in self.steps:
             json_obj['steps'].append(step.to_dict())
-
+        
         json_obj['task_id'] = str(self.pk)
         return json_obj
 

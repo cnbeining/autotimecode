@@ -23,7 +23,7 @@ class VADResource(Resource):
         request.get_json(force = True)
         args = parser.parse_args()
         
-        vad_task = VADTask(wav_url = args['wav_url'], timestamp = int(time.time()))
+        vad_task = VADTask(wav_url = args['wav_url'])
         
         vad_task.save()
         

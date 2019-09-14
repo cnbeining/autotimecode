@@ -1,27 +1,20 @@
 #!/usr/bin/env python
 #coding:utf-8
+import time
 
 from bson import ObjectId
 from mongoengine import DoesNotExist, ValidationError
 
 from config import db
-
-
-class VADTaskStep(db.EmbeddedDocument):
-    number = db.IntField(required = False, default = 0)
-    comment = db.StringField(required = False, default = '')
-    timestamp = db.IntField(required = False)
-    
-    def to_dict(self):
-        return dict(self.to_mongo(fields=['number', 'comment', 'timestamp']))
+from db import TaskStep
 
 
 class VADTask(db.Document):
     wav_url = db.StringField(required = False, dafault = '')
     wav_tmp_path = db.StringField(required = False, dafault = '/tmp/tmppath')
     srt_content = db.StringField(required = False, dafault = '')
-    steps = db.EmbeddedDocumentListField(VADTaskStep)
-    timestamp = db.IntField(required = False)
+    steps = db.EmbeddedDocumentListField(TaskStep)
+    timestamp = db.LongField(required = False, default = time.time)
 
     meta = {
         'collection': 'vad_task',
@@ -31,6 +24,10 @@ class VADTask(db.Document):
         ],
         'strict': False
     }
+    
+    def add_step(self, step_obj):
+        self.steps.append(step_obj)
+        return self.save()
     
     def to_dict(self):
         json_obj = dict(self.to_mongo(fields = ['wav_url', 'srt_content', 'timestamp']))
