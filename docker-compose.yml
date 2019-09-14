@@ -25,18 +25,21 @@ services:
   autotimecode-api:
     build: ./autotimecode_api/
     container_name: autotimecode-api
+    environment:
+      - MONGO_URL
+      - CELERY_BROKER_URL
     ports:
-      - 5155:5155
+      - 5055:5055
 
   autotimecode-worker:
     build: ./autotimecode_worker/
     container_name: autotimecode-worker
+    volumes:
+      - tmp-volume:/tmp/
+    environment:
+      - MONGO_URL
+      - CELERY_BROKER_URL
 
 volumes:
   tmp-volume:
     driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: /Users/Beining/Documents/coding/VAD/2005
-
