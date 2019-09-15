@@ -20,6 +20,8 @@ Make sure the code is compatible with Python 3.5 as the base image is Debian 9.6
 
 Input WAV should be 16K.
 
+Take only relevant code from Kaldi to avoid an extensive build.
+
 ## FAQ
 
 ### Q: Why not pykaldi?
