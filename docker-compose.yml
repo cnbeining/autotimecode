@@ -14,6 +14,10 @@ services:
       - tmp-volume:/tmp/
     container_name: gentle-xmlrpc
 
+  punct-segment-xmlrpc:
+    build: ./punct_segment_xmlrpc/
+    container_name: punct-segment-xmlrpc
+
   tensorflow-serving-vad:
     image: tensorflow/serving:latest
     restart: unless-stopped
@@ -29,7 +33,7 @@ services:
       - MONGO_URL
       - CELERY_BROKER_URL
     ports:
-      - 5055:5055
+      - 5155:5155
 
   autotimecode-worker:
     build: ./autotimecode_worker/
