@@ -56,8 +56,8 @@ The authors are working hard to make it happen. Again, stay tuned!
 
 ## Authors
 
-- David Zhuang (@cnbeining ), https://www.cnbeining.com/ . Coded this thing. Productionalized the ML models involved. 
-- Yuan-Hang Zhang(@sailordiary ), https://www.sailorzhang.com/ . Designed the ML algos.
+- David Zhuang, https://www.cnbeining.com/ , https://github.com/cnbeining . Coded this thing. Productionalized the ML models involved. 
+- Yuan-Hang Zhang, https://www.sailorzhang.com/ , https://github.com/sailordiary . Designed the ML algos.
 
 The authors are member of, and acknowledge the help from [ACICFG](https://www.chineseaci.com).
 
@@ -73,3 +73,6 @@ Kaldi is located at https://kaldi-asr.org/ , Apache 2.0 license.
 
 `ffsend` binary is provided by Tim Visée, https://github.com/timvisee/ffsend , GPL 3.0. If you have concern, please remove this file.
 
+VAD engine is based on work of Hebbar, R., Somandepalli, K., & Narayanan, S. (2019). Robust Speech Activity Detection in Movie Audio: Data Resources and Experimental Evaluation. ICASSP 2019 - 2019 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). doi: 10.1109/icassp.2019.8682532 . Original code can be retrieved at https://github.com/usc-sail/mica-speech-activity-detection .
+
+`txt2txt`, `deepcorrect` and `deepsegment` are written by Bedapudi Praneeth, https://github.com/bedapudi6788 , GPL 3.0.
