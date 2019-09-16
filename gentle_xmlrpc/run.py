@@ -9,6 +9,7 @@ import json
 import multiprocessing
 import os
 import subprocess
+import xmlrpc.client
 from pathlib import Path
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
@@ -16,6 +17,8 @@ from socketserver import ThreadingMixIn
 import gentle
 import logging
 from srt import *
+
+punct_segment_server = xmlrpc.client.ServerProxy('http://punct-segment-xmlrpc:8000/RPC2')
 
 
 class ThreadXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer): pass
@@ -197,12 +200,23 @@ def batch_fa(subtitle, wav_path_list):
     return result
 
 
-def run_gentle(wav_path, srt_content, elastic = 0.5):
+def segment_subtitle(subtitle):
+    """list of Subtitle->list of Subtitle"""
+    for sub in subtitle:
+        sub.content = '\n'.join(punct_segment_server.segment_sentence(' '.join(sub.content.split('\n'))))
+    return subtitle
+    
+
+def run_gentle(wav_path, srt_content, segment):
     """str, str-> str of Subtitle
     """
     subtitle = list(parse(srt_content))
     
     subtitle = cleanup_subtitle(subtitle, elastic = 0)
+    
+    # calling DeepSegment and DeepCorrect
+    if segment:
+        subtitle = segment_subtitle(subtitle)
     
     wav_path_list = generate_audio_segments(wav_path, subtitle, elastic = 0)
     
