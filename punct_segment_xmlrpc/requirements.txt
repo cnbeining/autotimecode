@@ -1,3 +1,4 @@
 srt
 numpy
-keras
+keras==2.2.4
+seqtag_keras

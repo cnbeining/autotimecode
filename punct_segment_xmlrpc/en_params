@@ -1,0 +1,417 @@
+{
+    "backend": "tensorflow",
+    "class_name": "Model",
+    "config": {
+        "input_layers": [
+            [
+                "word_input",
+                0,
+                0
+            ],
+            [
+                "char_input",
+                0,
+                0
+            ]
+        ],
+        "layers": [
+            {
+                "class_name": "InputLayer",
+                "config": {
+                    "batch_input_shape": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "dtype": "int32",
+                    "name": "char_input",
+                    "sparse": false
+                },
+                "inbound_nodes": [],
+                "name": "char_input"
+            },
+            {
+                "class_name": "InputLayer",
+                "config": {
+                    "batch_input_shape": [
+                        null,
+                        null
+                    ],
+                    "dtype": "int32",
+                    "name": "word_input",
+                    "sparse": false
+                },
+                "inbound_nodes": [],
+                "name": "word_input"
+            },
+            {
+                "class_name": "Embedding",
+                "config": {
+                    "activity_regularizer": null,
+                    "batch_input_shape": [
+                        null,
+                        null
+                    ],
+                    "dtype": "float32",
+                    "embeddings_constraint": null,
+                    "embeddings_initializer": {
+                        "class_name": "RandomUniform",
+                        "config": {
+                            "maxval": 0.05,
+                            "minval": -0.05,
+                            "seed": null
+                        }
+                    },
+                    "embeddings_regularizer": null,
+                    "input_dim": 346,
+                    "input_length": null,
+                    "mask_zero": true,
+                    "name": "char_embedding",
+                    "output_dim": 25,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "char_input",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "char_embedding"
+            },
+            {
+                "class_name": "Embedding",
+                "config": {
+                    "activity_regularizer": null,
+                    "batch_input_shape": [
+                        null,
+                        null
+                    ],
+                    "dtype": "float32",
+                    "embeddings_constraint": null,
+                    "embeddings_initializer": {
+                        "class_name": "RandomUniform",
+                        "config": {
+                            "maxval": 0.05,
+                            "minval": -0.05,
+                            "seed": null
+                        }
+                    },
+                    "embeddings_regularizer": null,
+                    "input_dim": 198622,
+                    "input_length": null,
+                    "mask_zero": true,
+                    "name": "word_embedding",
+                    "output_dim": 100,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "word_input",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "word_embedding"
+            },
+            {
+                "class_name": "TimeDistributed",
+                "config": {
+                    "layer": {
+                        "class_name": "Bidirectional",
+                        "config": {
+                            "layer": {
+                                "class_name": "LSTM",
+                                "config": {
+                                    "activation": "tanh",
+                                    "activity_regularizer": null,
+                                    "bias_constraint": null,
+                                    "bias_initializer": {
+                                        "class_name": "Zeros",
+                                        "config": {}
+                                    },
+                                    "bias_regularizer": null,
+                                    "dropout": 0.0,
+                                    "go_backwards": false,
+                                    "implementation": 1,
+                                    "kernel_constraint": null,
+                                    "kernel_initializer": {
+                                        "class_name": "VarianceScaling",
+                                        "config": {
+                                            "distribution": "uniform",
+                                            "mode": "fan_avg",
+                                            "scale": 1.0,
+                                            "seed": null
+                                        }
+                                    },
+                                    "kernel_regularizer": null,
+                                    "name": "lstm_1",
+                                    "recurrent_activation": "hard_sigmoid",
+                                    "recurrent_constraint": null,
+                                    "recurrent_dropout": 0.0,
+                                    "recurrent_initializer": {
+                                        "class_name": "Orthogonal",
+                                        "config": {
+                                            "gain": 1.0,
+                                            "seed": null
+                                        }
+                                    },
+                                    "recurrent_regularizer": null,
+                                    "return_sequences": false,
+                                    "return_state": false,
+                                    "stateful": false,
+                                    "trainable": true,
+                                    "unit_forget_bias": true,
+                                    "units": 25,
+                                    "unroll": false,
+                                    "use_bias": true
+                                }
+                            },
+                            "merge_mode": "concat",
+                            "name": "bidirectional_1",
+                            "trainable": true
+                        }
+                    },
+                    "name": "time_distributed_1",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "char_embedding",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "time_distributed_1"
+            },
+            {
+                "class_name": "Concatenate",
+                "config": {
+                    "axis": -1,
+                    "name": "concatenate_1",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "word_embedding",
+                            0,
+                            0,
+                            {}
+                        ],
+                        [
+                            "time_distributed_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "concatenate_1"
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_1",
+                    "noise_shape": null,
+                    "rate": 0.5,
+                    "seed": null,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "concatenate_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "dropout_1"
+            },
+            {
+                "class_name": "Bidirectional",
+                "config": {
+                    "layer": {
+                        "class_name": "LSTM",
+                        "config": {
+                            "activation": "tanh",
+                            "activity_regularizer": null,
+                            "bias_constraint": null,
+                            "bias_initializer": {
+                                "class_name": "Zeros",
+                                "config": {}
+                            },
+                            "bias_regularizer": null,
+                            "dropout": 0.0,
+                            "go_backwards": false,
+                            "implementation": 1,
+                            "kernel_constraint": null,
+                            "kernel_initializer": {
+                                "class_name": "VarianceScaling",
+                                "config": {
+                                    "distribution": "uniform",
+                                    "mode": "fan_avg",
+                                    "scale": 1.0,
+                                    "seed": null
+                                }
+                            },
+                            "kernel_regularizer": null,
+                            "name": "lstm_2",
+                            "recurrent_activation": "hard_sigmoid",
+                            "recurrent_constraint": null,
+                            "recurrent_dropout": 0.0,
+                            "recurrent_initializer": {
+                                "class_name": "Orthogonal",
+                                "config": {
+                                    "gain": 1.0,
+                                    "seed": null
+                                }
+                            },
+                            "recurrent_regularizer": null,
+                            "return_sequences": true,
+                            "return_state": false,
+                            "stateful": false,
+                            "trainable": true,
+                            "unit_forget_bias": true,
+                            "units": 100,
+                            "unroll": false,
+                            "use_bias": true
+                        }
+                    },
+                    "merge_mode": "concat",
+                    "name": "bidirectional_2",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "dropout_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "bidirectional_2"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "tanh",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_avg",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": null,
+                    "name": "dense_1",
+                    "trainable": true,
+                    "units": 100,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "bidirectional_2",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "dense_1"
+            },
+            {
+                "class_name": "CRF",
+                "config": {
+                    "activation": "linear",
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "boundary_constraint": null,
+                    "boundary_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "boundary_regularizer": null,
+                    "chain_constraint": null,
+                    "chain_initializer": {
+                        "class_name": "Orthogonal",
+                        "config": {
+                            "gain": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "chain_regularizer": null,
+                    "input_dim": 100,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_avg",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": null,
+                    "learn_mode": "join",
+                    "name": "crf_1",
+                    "sparse_target": false,
+                    "test_mode": "viterbi",
+                    "trainable": true,
+                    "units": 3,
+                    "unroll": false,
+                    "use_bias": true,
+                    "use_boundary": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "dense_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "crf_1"
+            }
+        ],
+        "name": "model_1",
+        "output_layers": [
+            [
+                "crf_1",
+                0,
+                0
+            ]
+        ]
+    },
+    "keras_version": "2.2.4"
+}
