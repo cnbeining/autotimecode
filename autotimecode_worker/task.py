@@ -17,6 +17,7 @@ from mongoengine import *
 
 vad_server = xmlrpc.client.ServerProxy('http://kaldi-logmel:8000/RPC2')
 fa_server = xmlrpc.client.ServerProxy('http://gentle-xmlrpc:8000/RPC2')
+punct_segment_server = xmlrpc.client.ServerProxy('http://gentle-xmlrpc:8000/RPC2')
 
 connect(host = os.environ['MONGO_URL'])
 
@@ -36,6 +37,11 @@ def ping():
 @app.task(name = 'fa.ping')
 def ping():
     return fa_server.ping()
+
+
+@app.task(name = 'punct_segment.ping')
+def ping():
+    return punct_segment_server.ping()
 
 
 @app.task(name = 'worker.find_vad')
@@ -176,7 +182,11 @@ def run_fa(task_id):
         return False
     
     ## Conduct FA
-    result = fa_server.run_gentle(media_file_path, request_srt_content)
+    segment = False
+    if fa_task.segment:
+        segment = True
+    
+    result = fa_server.run_gentle(media_file_path, request_srt_content, segment)
     if len(result) < 1:
         step_obj = TaskStep(comment = 'Cannot conduct FA')
     else:
