@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
 from flask import Flask, jsonify, request
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import reqparse, abort, Api, Resource, inputs
 import time
 
 from celery_app import celery
@@ -13,6 +13,7 @@ parser.add_argument('wav_url', type = str, required = True,
                     help = "wav_url cannot be blank!")
 parser.add_argument('srt', type = str, required = True,
                     help = "srt cannot be blank!")
+parser.add_argument('segment', type = inputs.boolean, required = False, default = False)
 
 
 class FAResource(Resource):
@@ -21,7 +22,7 @@ class FAResource(Resource):
         request.get_json(force = True)
         args = parser.parse_args()
         
-        fa_task = FATask(wav_url = args['wav_url'], request_srt_content=args['srt'])
+        fa_task = FATask(wav_url = args['wav_url'], request_srt_content=args['srt'], segment = args['segment'])
 
         fa_task.save()
 

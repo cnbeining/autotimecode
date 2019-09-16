@@ -15,7 +15,8 @@ class FATask(db.Document):
     request_srt_content = db.StringField(required = False, dafault = '')
     result_srt_content = db.StringField(required = False, dafault = '')
     steps = db.EmbeddedDocumentListField(TaskStep)
-    timestamp = db.LongField(required = False, default=time.time)
+    timestamp = db.LongField(required = False, default = time.time)
+    segment = db.BooleanField(required = False, dafault = False)
     
     meta = {
         'collection': 'fa_task',
@@ -32,7 +33,8 @@ class FATask(db.Document):
     
     def to_dict(self):
         json_obj = dict(
-            self.to_mongo(fields = ['wav_url', 'request_srt_content', 'result_srt_content', 'steps', 'timestamp']))
+                self.to_mongo(
+                    fields = ['wav_url', 'request_srt_content', 'result_srt_content', 'steps', 'timestamp', 'segment']))
         json_obj.pop('_id', '')
         
         json_obj['steps'] = []
