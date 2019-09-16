@@ -65,9 +65,11 @@ The authors are member of, and acknowledge the help from [ACICFG](https://www.ch
 
 GPL 3.0. Please contact authors if you need licensing. 
 
-Gentle is written by @lowerquality, MIT license, https://github.com/lowerquality/gentle .
+Please retrieve copies of licenses from respected repo links. 
 
-Kaldi is located at https://kaldi-asr.org/ , Apache 2.0 license.
+`Gentle` is written by @lowerquality, MIT license, https://github.com/lowerquality/gentle .
+
+`Kaldi` is located at https://kaldi-asr.org/ , Apache 2.0 license.
 
 `ffsend.py` was originally written by Robert Xiao (nneonneo@gmail.com), https://github.com/nneonneo/ffsend, and is licensed under the Mozilla Public License 2.0. If you have concern, remove this file and disable Firefox Send.
 
@@ -75,4 +77,4 @@ Kaldi is located at https://kaldi-asr.org/ , Apache 2.0 license.
 
 VAD engine is based on work of Hebbar, R., Somandepalli, K., & Narayanan, S. (2019). Robust Speech Activity Detection in Movie Audio: Data Resources and Experimental Evaluation. ICASSP 2019 - 2019 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). doi: 10.1109/icassp.2019.8682532 . Original code can be retrieved at https://github.com/usc-sail/mica-speech-activity-detection .
 
-`txt2txt`, `deepcorrect` and `deepsegment` are written by Bedapudi Praneeth, https://github.com/bedapudi6788 , GPL 3.0.
+`txt2txt`, `deepcorrect` and `deepsegment` were written by Bedapudi Praneeth, https://github.com/bedapudi6788 , GPL 3.0.
