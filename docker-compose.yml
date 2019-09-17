@@ -33,7 +33,7 @@ services:
       - MONGO_URL
       - CELERY_BROKER_URL
     ports:
-      - 5155:5155
+      - 5055:5055
 
   autotimecode-worker:
     build: ./autotimecode_worker/
