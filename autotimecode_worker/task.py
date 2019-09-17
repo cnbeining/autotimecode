@@ -10,10 +10,13 @@ from srt import *
 
 from db.fa import get_fa_task_by_task_id
 from db import TaskStep
+from db.stt import get_stt_task_by_task_id
 from helper import download_file_from_ffsend, get_step_obj_from_ffsend_code
 from db.vad import get_vad_task_by_task_id
 import xmlrpc.client
 from mongoengine import *
+
+from stt.chromium import generate_audio_segments, recognize_segments, merge_result
 
 vad_server = xmlrpc.client.ServerProxy('http://kaldi-logmel:8000/RPC2')
 fa_server = xmlrpc.client.ServerProxy('http://gentle-xmlrpc:8000/RPC2')
@@ -23,6 +26,14 @@ connect(host = os.environ['MONGO_URL'])
 
 app = Celery('task', broker = os.environ['CELERY_BROKER_URL'])
 
+# TODO: refactor this file
+
+
+def segment_subtitle(subtitle):
+    """list of Subtitle->list of Subtitle"""
+    for sub in subtitle:
+        sub.content = '\n'.join(punct_segment_server.segment_sentence(' '.join(sub.content.split('\n'))))
+    return subtitle
 
 @app.task(name = 'worker.ping')
 def ping():
@@ -49,6 +60,15 @@ def find_vad(task_id):
     return get_vad_task_by_task_id(task_id).to_dict()
 
 
+def ensure_tmp_dir(dir_name):
+    """"""
+    tmp_dir = '/tmp/' + dir_name
+
+    # make sure new working dir exists
+    Path(tmp_dir).mkdir(parents = True, exist_ok = True)
+    
+    return tmp_dir
+
 @app.task(name = 'vad.run_vad')
 def run_vad(task_id):
     """"""
@@ -58,10 +78,7 @@ def run_vad(task_id):
         return ''
     
     tmp_pathname = str(vad_task.pk)
-    tmp_dir = '/tmp/' + tmp_pathname
-    
-    # make sure new working dir exists
-    Path(tmp_dir).mkdir(parents = True, exist_ok = True)
+    tmp_dir = ensure_tmp_dir(tmp_pathname)
     
     # shall be the working dir
     os.chdir(tmp_dir)
@@ -138,11 +155,8 @@ def run_fa(task_id):
         return ''
     
     tmp_pathname = str(fa_task.pk)
-    tmp_dir = '/tmp/' + tmp_pathname
-    
-    # make sure new working dir exists
-    Path(tmp_dir).mkdir(parents = True, exist_ok = True)
-    
+    tmp_dir = ensure_tmp_dir(tmp_pathname)
+
     # shall be the working dir
     os.chdir(tmp_dir)
     
@@ -151,8 +165,7 @@ def run_fa(task_id):
         code, media_file_path = download_file_from_ffsend(fa_task.wav_url, tmp_dir)
         step_obj = get_step_obj_from_ffsend_code(code)
         
-        fa_task.steps.append(step_obj)
-        fa_task.save()
+        fa_task.add_step(step_obj)
         
         if code < 0:
             shutil.rmtree(tmp_dir, ignore_errors = True)
@@ -198,6 +211,80 @@ def run_fa(task_id):
     
     if len(result) < 1:
         return False
+    
+    return True
+
+
+@app.task(name = 'stt.chromium.run_stt')
+def run_chromium_stt(task_id):
+    """"""
+    ## Fetch task
+    stt_task = get_stt_task_by_task_id(task_id)
+    if not stt_task:
+        return ''
+
+    tmp_pathname = str(stt_task.pk)
+    tmp_dir = ensure_tmp_dir(tmp_pathname)
+
+    # shall be the working dir
+    os.chdir(tmp_dir)
+
+    ## File uploading
+    if 'send.firefox.com' in stt_task.wav_url:
+        code, media_file_path = download_file_from_ffsend(stt_task.wav_url, tmp_dir)
+        step_obj = get_step_obj_from_ffsend_code(code)
+
+        stt_task.add_step(step_obj)
+    
+        if code < 0:
+            shutil.rmtree(tmp_dir, ignore_errors = True)
+            return False
+
+    else:
+        stt_task.add_step(TaskStep(comment = 'Uploader not implemented'))
+        return False
+
+    ## Parse SRT
+    if not stt_task.request_srt_content:
+        stt_task.add_step(TaskStep(comment = 'Request SRT is empty'))
+        shutil.rmtree(tmp_dir, ignore_errors = True)
+        return False
+
+    try:
+        request_srt_content = json.loads('{"srt":"' + stt_task.request_srt_content + '"}')['srt']
+    except:
+        stt_task.add_step(TaskStep(comment = 'SRT cannot be parsed'))
+        shutil.rmtree(tmp_dir, ignore_errors = True)
+        return False
+    
+    ## Conduct STT
+    # convert SRT to list of Subtitle
+    subtitle = list(parse(request_srt_content))
+    
+    # segment audio into smaller chunks
+    flac_path_list = generate_audio_segments(media_file_path, subtitle, elastic = 0.5)
+    stt_task.add_step(TaskStep(comment = 'File segmented'))
+    
+    lang = 'en'
+    if stt_task.lang:
+        lang = stt_task.lang
+    
+    # Call API
+    logging.warning(flac_path_list)
+    result_recognize = recognize_segments(flac_path_list, lang_code = lang)
+    logging.warning(result_recognize)
+    new_subtitle = merge_result(subtitle, result_recognize)
+    stt_task.add_step(TaskStep(comment = 'STT conducted'))
+    
+    # Clean up and put back punctuations
+    if lang == 'en' and stt_task.correct:
+        new_subtitle = segment_subtitle(new_subtitle)
+        stt_task.add_step(TaskStep(comment = 'DeepCorrect conducted'))
+    
+    stt_task.result_srt_content = compose(new_subtitle)
+    
+    stt_task.save()
+    shutil.rmtree(tmp_dir, ignore_errors = True)
     
     return True
 
