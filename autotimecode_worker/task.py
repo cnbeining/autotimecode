@@ -6,10 +6,13 @@ import shutil
 
 from celery import Celery
 from pathlib import Path
+
+from googletrans import Translator
 from srt import *
 
 from db.fa import get_fa_task_by_task_id
 from db import TaskStep
+from db.nmt import get_nmt_task_by_task_id
 from db.stt import get_stt_task_by_task_id
 from helper import download_file_from_ffsend, get_step_obj_from_ffsend_code
 from db.vad import get_vad_task_by_task_id
@@ -34,6 +37,7 @@ def segment_subtitle(subtitle):
     for sub in subtitle:
         sub.content = '\n'.join(punct_segment_server.segment_sentence(' '.join(sub.content.split('\n'))))
     return subtitle
+
 
 @app.task(name = 'worker.ping')
 def ping():
@@ -285,6 +289,51 @@ def run_chromium_stt(task_id):
     
     stt_task.save()
     shutil.rmtree(tmp_dir, ignore_errors = True)
+    
+    return True
+
+
+@app.task(name = 'translate.google.run')
+def run_google_translate(task_id):
+    """"""
+    ## Fetch task
+    nmt_task = get_nmt_task_by_task_id(task_id)
+    if not nmt_task:
+        return ''
+    
+    ## Parse SRT
+    if not nmt_task.request_srt_content:
+        nmt_task.add_step(TaskStep(comment = 'Request SRT is empty'))
+        return False
+    
+    try:
+        request_srt_content = json.loads('{"srt":"' + nmt_task.request_srt_content + '"}')['srt']
+    except:
+        nmt_task.add_step(TaskStep(comment = 'SRT cannot be parsed'))
+        return False
+    
+    ## Conduct NMT
+    # convert SRT to list of Subtitle
+    subtitle = list(parse(request_srt_content))
+    
+    lang = 'zh-cn'
+    if nmt_task.lang:
+        lang = nmt_task.lang
+
+    nmt_task.add_step(TaskStep(comment = 'Running translation'))
+
+    # Call API
+    translator = Translator()
+    translations = translator.translate([i.content for i in subtitle], dest = lang)
+    
+    for sub, translation in zip(subtitle, translations):
+        sub.content = translation.text + '\n' + sub.content  # translation above original
+    
+    nmt_task.add_step(TaskStep(comment = 'Translation done'))
+
+    nmt_task.result_srt_content = compose(subtitle)
+
+    nmt_task.save()
     
     return True
 

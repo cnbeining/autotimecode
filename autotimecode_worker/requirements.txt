@@ -9,3 +9,4 @@ requests
 requests_toolbelt
 pycryptodomex
 srt
+googletrans
