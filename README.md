@@ -1,6 +1,6 @@
 # autotimecode
 
-Video to aligned timecode(SRT) with transcription in 3 clicks.
+Video to aligned timecode(SRT), transcription and translation in 4 clicks.
 
 Minimal intrusive to your current workflow. Granular API exposure. Modularized. 
 
@@ -25,15 +25,16 @@ Note this workflow is based on ACICFG's recommendation: adjust to fit you needs.
 1. Get a rough version of timecode from video: covered in this project, `/vad/` endpoint
 2. Transcribe the video (with help of STT). Roughly edit the SRT to include any time range that may be missing from the 1st step: Model building is **NOT** the target of this project - check `/stt/` endpoint for voice recognition helper.
 3. From transcribed SRT, generate SRT with accurate timecode: `/fa/` endpoint.
-4. Continue on translation (maybe with help of Machine Translation): may expose endpoints calling 3rd party services. 
+4. Continue on translation (maybe with help of Machine Translation): check `/nmt/` endpoint. 
 
 ## Background
 
-This project is solving 3 problems:
+This project is solving 4 problems:
 
 1. Given video, generate timecode on when human speech exists;
 2. Given video and timecode, transcribe the video automatically;
-3. Given rough timecode, generate accurate timecode aligned with video.
+3. Given rough timecode, generate accurate timecode aligned with video;
+4. Given transcription, generate translation.
 
 ## FAQ
 
@@ -91,6 +92,6 @@ VAD engine is based on work of Hebbar, R., Somandepalli, K., & Narayanan, S. (20
 
 `txt2txt`, `deepcorrect` and `deepsegment` were written by Bedapudi Praneeth, https://github.com/bedapudi6788 , GPL 3.0.
 
-STT technology is provided by Google.
+STT and NMT technologies are provided by Google.
 
 Some STT code are originally from https://github.com/agermanidis/autosub , MIT license.
