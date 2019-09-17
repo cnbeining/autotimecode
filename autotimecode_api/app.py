@@ -8,6 +8,7 @@ from config import db
 from error_handlers import register_errorhandlers
 from resources import HelloWorld
 from resources.fa import FAResource, FATaskResource, FATaskSRTResource
+from resources.stt import STTResource, STTTaskResource, STTTaskSRTResource
 from resources.vad import VADTaskResource, VADResource, VADTaskSRTResource
 
 
@@ -37,6 +38,10 @@ def create_app():
     api.add_resource(FAResource, '/fa/')
     api.add_resource(FATaskResource, '/fa/<task_id>')
     api.add_resource(FATaskSRTResource, '/fa/<task_id>/srt')
+
+    api.add_resource(STTResource, '/stt/')
+    api.add_resource(STTTaskResource, '/stt/<task_id>')
+    api.add_resource(STTTaskSRTResource, '/stt/<task_id>/srt')
     
     return app
 
