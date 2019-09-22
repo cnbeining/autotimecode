@@ -44,6 +44,12 @@ services:
       - MONGO_URL
       - CELERY_BROKER_URL
 
+  autotimecode-fe:
+    build: ./autotimecode_fe/
+    container_name: autotimecode-fe
+    ports:
+      - 5056:800
+
 volumes:
   tmp-volume:
     driver: local
